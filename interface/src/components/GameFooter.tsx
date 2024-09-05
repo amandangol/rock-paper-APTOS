@@ -3,8 +3,8 @@ import { StyledFooter as StyledGameFooter } from '../styles/StyledComponents';
 
 const GameFooter: React.FC = () => (
   <StyledGameFooter>
-    Cosmic Rock Paper Scissors ©2024 Created by Neosmic RPS
-  </StyledGameFooter>
+    <p>Aptos Rock Paper Scissors ©2024 | Created by <strong>4m.4n</strong></p>
+    </StyledGameFooter>
 );
 
 export default GameFooter;

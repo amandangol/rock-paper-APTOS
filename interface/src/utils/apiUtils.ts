@@ -116,7 +116,7 @@ export const fetchAchievements = async (
 
       if (Array.isArray(data.achievements)) {
         const formattedAchievements = data.achievements.map(ach => ({
-          id: ach.id,
+          id: Number(ach.id),
           name: ach.name,
           description: ach.description,
           unlocked: ach.unlocked,
@@ -134,6 +134,10 @@ export const fetchAchievements = async (
     }
   } catch (error) {
     console.error("Error fetching achievements:", error);
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
     setAchievements([]);
   }
 };

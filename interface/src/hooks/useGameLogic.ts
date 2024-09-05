@@ -26,6 +26,8 @@ export const useGameLogic = () => {
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [resourceBalance, setResourceBalance] = useState<number | null>(null);
   const [fundAmount, setFundAmount] = useState<string>('');
+  const [isAchievementsLoading, setIsAchievementsLoading] = useState(false);
+
 
   useEffect(() => {
     if (connected && account) {
@@ -67,6 +69,38 @@ export const useGameLogic = () => {
     const fetchedHistory = await fetchGameHistory(client, account);
     setHistory(fetchedHistory);
   }, [account]);
+
+  const fetchAchievementsWithTimeout = useCallback(async () => {
+    setIsAchievementsLoading(true);
+    try {
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Achievement fetch timeout')), 10000)
+      );
+      await Promise.race([
+        fetchAchievements(client, account!, setAchievements),
+        timeoutPromise
+      ]);
+    } catch (error) {
+      console.error('Error fetching achievements:', error);
+      setAchievements([]);
+    } finally {
+      setIsAchievementsLoading(false);
+    }
+  }, [account, client]);
+
+  useEffect(() => {
+    if (connected && account) {
+      checkGameInitialization(client, account, setGameState, setIsGameInitialized, setIsLoading);
+      getGameHistory();
+      fetchAchievementsWithTimeout();
+    } else {
+      setIsLoading(false);
+      setIsGameInitialized(false);
+      setGameState(null);
+      setHistory([]);
+      setAchievements([]);
+    }
+  }, [connected, account, fetchAchievementsWithTimeout]);
 
   const handlePlayMove = useCallback(async (moveIndex: number) => {
     if (!account || !isGameInitialized) return;
@@ -145,5 +179,7 @@ export const useGameLogic = () => {
       handleClaimReward,
       handleFundGame,
       getGameHistory,
+      isAchievementsLoading,
+
     };
   };

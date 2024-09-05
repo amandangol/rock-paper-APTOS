@@ -11,7 +11,7 @@ import AchievementCard from './components/AchievementCard';
 import ResultModal from './components/ResultModal';
 import LoadingOverlay from './components/LoadingOverlay';
 import { GameWrapper, GameContent, StatsRow, GameTabs } from './styles/StyledComponents';
-import { Col, Row } from 'antd';
+import { Alert, Col, Row, Spin } from 'antd';
 import TabPane from 'antd/es/tabs/TabPane';
 
 const App: React.FC = () => {
@@ -30,6 +30,7 @@ const App: React.FC = () => {
     handleClaimReward,
     setIsModalVisible,
     getGameHistory,
+    isAchievementsLoading
   } = useGameLogic();
 
   return (
@@ -61,25 +62,35 @@ const App: React.FC = () => {
                     </Col>
                   </StatsRow>
                 )}
-                <GameTabs defaultActiveKey="1">
-                  <TabPane tab="Game History" key="1">
-                    <GameHistory history={history} getGameHistory={getGameHistory} />
-                  </TabPane>
-                  <TabPane tab="Achievements" key="2">
-                    <Row gutter={[16, 16]}>
-                      {achievements.map((achievement) => (
-                        <Col key={achievement.id} span={8}>
-                          <AchievementCard
-                            achievement={achievement}
-                            claimedRewards={claimedRewards}
-                            claimReward={handleClaimReward}
-                            isLoading={isLoading}
-                          />
-                        </Col>
-                      ))}
-                    </Row>
-                  </TabPane>
-                </GameTabs>
+               <GameTabs defaultActiveKey="1">
+        <TabPane tab="Game History" key="1">
+          <GameHistory history={history} getGameHistory={getGameHistory} />
+        </TabPane>
+        <TabPane tab="Achievements" key="2">
+          {isAchievementsLoading ? (
+            <Spin tip="Loading achievements..." />
+          ) : achievements.length > 0 ? (
+            <Row gutter={[16, 16]}>
+              {achievements.map((achievement) => (
+                <Col key={achievement.id} span={8}>
+                  <AchievementCard
+                    achievement={achievement}
+                    claimedRewards={claimedRewards}
+                    claimReward={handleClaimReward}
+                    isLoading={isLoading}
+                  />
+                </Col>
+              ))}
+            </Row>
+          ) : (
+            <Alert
+              message="No achievements found"
+              description="Play your first game to earn achievements!"
+              type="warning"
+            />
+          )}
+        </TabPane>
+      </GameTabs>
                 <ResultModal
                   isVisible={isModalVisible}
                   onClose={() => setIsModalVisible(false)}

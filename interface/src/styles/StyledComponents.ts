@@ -36,14 +36,40 @@ export const StyledHeader = styled(Header)`
   position: fixed;
   top: 0;
   left: 0;
-  background: linear-gradient(135deg, rgba(118, 75, 162, 0.8), rgba(102, 126, 234, 0.8));
-  backdrop-filter: blur(10px);
-  padding: 20px 40px;
+  background: linear-gradient(to right, #ffffff, #f0f0f0);
+  padding: 16px 32px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 1000;
+
+  .logo-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    img {
+      height: 40px;
+      width: auto;
+    }
+  }
+
+  .title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0;
+    padding-left: 16px;
+    border-left: 2px solid #6366F1;
+    line-height: 1.2;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .wallet-container {
+    display: flex;
+    align-items: center;
+  }
 `;
 
 export const GameContent = styled(Content)`
@@ -60,19 +86,30 @@ export const GameContent = styled(Content)`
   z-index: 1;
 `;
 
-export const StyledFooter = styled(Footer)`
+export const StyledFooter = styled.footer`
   width: 100%;
-  position: relative;
-  bottom: 0;
-  left: 0;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  text-align: center;
+  background-color: #f8f9fa;
   padding: 20px;
-  color: white;
-  box-shadow: 0 -6px 30px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
+  text-align: center;
+  color: #333;
+  font-size: 1rem;
+  border-top: 1px solid #e0e0e0;
+
+  p {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    color: #555; /* Slightly muted color for the text */
+    
+    strong {
+      color: #000; /* Emphasize the creator's name */
+    }
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.875rem; /* Slightly smaller text on mobile */
+  }
 `;
+
 
 export const GamePlayArea = styled.div`
   display: flex;
@@ -225,76 +262,6 @@ export const RewardButton = styled(Button)`
   }
 `;
 
-export const CustomModal = styled(Modal)`
-  .ant-modal-content {
-    border-radius: 15px;
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  }
-
-  .ant-modal-header {
-    border-bottom: none;
-    padding: 15px;
-    text-align: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 15px 15px 0 0;
-  }
-
-  .ant-modal-title {
-    color: white;
-    font-weight: bold;
-  }
-
-  .ant-modal-body {
-    padding: 20px 40px;
-  }
-
-  .ant-modal-footer {
-    border-top: none;
-    display: flex;
-    justify-content: center;
-    padding: 10px;
-  }
-
-  button {
-    background: #764ba2;
-    border: none;
-    color: white;
-    border-radius: 10px;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-
-    &:hover {
-      background: #667eea;
-    }
-  }
-`;
-
-export const ModalContent = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 20px;
-
-  h3 {
-    font-size: 28px;
-    color: #764ba2;
-  }
-
-  p {
-    font-size: 18px;
-    color: #333;
-    margin: 10px 0;
-  }
-`;
-
-export const ResultEmoji = styled.div`
-  font-size: 50px;
-  margin: 20px 0;
-`;
-
 export const HeroSection = styled.section`
   display: flex;
   flex-direction: column;
@@ -372,83 +339,72 @@ export const LoadingOverlay = styled.div`
   z-index: 1000;
 `;
 
-// Enhanced StatCard Component
-const StatCardWrapper = styled(motion.div)`
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  text-align: center;
-  color: #fff;
-  transition: all 0.3s ease;
+export const CustomModal = styled(Modal)`
+  .ant-modal-content {
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
 
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+  .ant-modal-header {
+    border-bottom: none;
+    padding: 15px;
+    text-align: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px 15px 0 0;
+  }
+
+  .ant-modal-title {
+    color: white;
+    font-weight: bold;
+  }
+
+  .ant-modal-body {
+    padding: 20px 40px;
+  }
+
+  .ant-modal-footer {
+    border-top: none;
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+  }
+
+  button {
+    background: #764ba2;
+    border: none;
+    color: white;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+
+    &:hover {
+      background: #667eea;
+    }
   }
 `;
 
-const StatTitle = styled(Title)`
-  color: #fff !important;
-  font-size: 1.2rem !important;
-  margin-bottom: 10px !important;
-`;
-
-const StatValue = styled.div`
-  font-size: 2.5rem;
-  font-weight: bold;
-  margin-bottom: 10px;
-`;
-
-const ProgressBarWrapper = styled.div`
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-  height: 10px;
-  overflow: hidden;
-`;
-
-// Enhanced GamePlayArea Component
-const GamePlayAreaWrapper = styled(motion.div)`
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(15px);
-  border-radius: 30px;
-  padding: 30px;
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  margin-bottom: 30px;
-`;
-
-const GameTitle = styled(Title)`
-  color: #fff !important;
-  text-align: center;
-  margin-bottom: 30px !important;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-`;
-
-const MoveButtonWrapper = styled(motion.div)`
+export const ModalContent = styled.div`
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  width: 120px;
-  height: 120px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  text-align: center;
+  padding: 20px;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.2);
+  h3 {
+    font-size: 28px;
+    color: #764ba2;
+  }
+
+  p {
+    font-size: 18px;
+    color: #333;
+    margin: 10px 0;
   }
 `;
 
-const MoveIcon = styled.span`
-  font-size: 3rem;
-`;
-
-const MoveName = styled.span`
-  font-size: 1rem;
-  margin-top: 10px;
-  color: #fff;
+export const ResultEmoji = styled.div`
+  font-size: 50px;
+  margin: 20px 0;
 `;

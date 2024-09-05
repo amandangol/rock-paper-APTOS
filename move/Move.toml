@@ -1,0 +1,10 @@
+[package]
+name = "rock_paper_scissors"
+version = "1.0.0"
+
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework/", rev = "main" }
+
+[addresses]
+rock_paper_scissors = "0x8545acf54e8034add98ccb8ad2b6a0d6232216f670f4f344ce1a1a31d5fa31ce"
+another_resource_account_add = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef" 

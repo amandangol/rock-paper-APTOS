@@ -20,7 +20,7 @@ Aptos is a Layer 1 blockchain that offers high throughput and low transaction co
 
 ## Smart Contract Overview
 
-The Move smart contract manages core game logic, achievements, rewards, and funding. Below are the key elements:
+The Move smart contract manages core game logic, achievements and rewards. Below are the key elements:
 
 ### 1. Game Initialization
 
@@ -109,6 +109,8 @@ fun generate_ai_choice(game_state: &GameState): u8 {
     // Generates a random AI choice (Rock, Paper, or Scissors)
 }
 ```
+
+![alt text](image.png)
 
 ## Getting Started
 

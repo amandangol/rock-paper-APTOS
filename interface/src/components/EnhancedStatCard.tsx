@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Row, Col, Typography, Tooltip } from 'antd';
+import {  Typography, Tooltip } from 'antd';
 import { motion } from 'framer-motion';
 
 const { Title } = Typography;

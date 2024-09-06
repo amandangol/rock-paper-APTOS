@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { Table } from 'antd';
 import { GameEvent } from '../types/types';
 import { MOVES, RESULTS } from '../constants/gameConstants';
 import { StyledTable } from '../styles/StyledComponents';

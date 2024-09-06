@@ -3,7 +3,6 @@ import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { AptosClient, CoinClient } from "aptos";
 import { message } from 'antd';
 import { GameState, GameEvent, Achievement } from '../types/types';
-import { MODULE_ADDRESS } from '../constants/gameConstants';
 import { checkGameInitialization, initializeGame, fetchGameHistory, playMove, fetchAchievements, claimReward, fetchClaimedRewards, fetchWalletBalance, fetchResourceBalance, fundGame } from '../utils/apiUtils';
 
 const client = new AptosClient('https://fullnode.testnet.aptoslabs.com/v1');
@@ -86,7 +85,7 @@ export const useGameLogic = () => {
     } finally {
       setIsAchievementsLoading(false);
     }
-  }, [account, client]);
+  }, [account]);
 
   useEffect(() => {
     if (connected && account) {

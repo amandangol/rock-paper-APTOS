@@ -1,10 +1,9 @@
 import styled from 'styled-components';
-import { Layout, Card, Badge, Button, Tabs, Table, Modal, Row, Typography } from 'antd';
+import { Layout, Card, Badge, Button, Tabs, Table, Modal, Row } from 'antd';
 import { motion } from 'framer-motion';
-const { Title } = Typography;
 
 
-const { Header, Content, Footer } = Layout;
+const { Header, Content } = Layout;
 
 export const GameWrapper = styled(Layout)`
   min-height: 100vh;

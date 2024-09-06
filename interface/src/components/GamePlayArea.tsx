@@ -1,7 +1,5 @@
 import React from 'react';
 import { Row, Col, Typography } from 'antd';
-import { GamePlayArea as StyledGamePlayArea, MoveButton } from '../styles/StyledComponents';
-import { MOVES, MOVE_NAMES } from '../constants/gameConstants';
 import { styled } from 'styled-components';
 import { motion } from 'framer-motion';
 

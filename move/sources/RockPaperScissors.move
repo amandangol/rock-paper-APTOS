@@ -155,6 +155,8 @@ module rock_paper_scissors::rock_paper_scissors {
         let achievements = borrow_global<Achievements>(account_addr);
         
         assert!(is_achievement_unlocked(achievements, achievement_id), E_ACHIEVEMENT_NOT_UNLOCKED);
+        
+        // Add this check to prevent duplicate claims
         assert!(!vector::contains(&reward_claim.claimed_rewards, &achievement_id), E_REWARD_ALREADY_CLAIMED);
         
         let reward_amount = get_reward_amount(achievement_id);

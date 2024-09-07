@@ -39,8 +39,8 @@ const App: React.FC = () => {
     setFundAmount,
     handleFundGame,
     getRewardAmount,
+    fetchClaimedRewards,
     claimingReward,
-    handleClaimStatusChange,
   } = useGameLogic();
 
   
@@ -68,13 +68,10 @@ const App: React.FC = () => {
           <Col key={achievement.id} span={8}>
             <AchievementCard
               achievement={achievement}
-              claimReward={handleClaimReward}
-              isLoading={isLoading}
+              handleClaimReward={handleClaimReward}
+              claimingReward={claimingReward}
               claimedRewards={claimedRewards}
               getRewardAmount={getRewardAmount}
-              claimingReward={claimingReward}
-              onClaimStatusChange={handleClaimStatusChange}
-
             />
           </Col>
         ))}

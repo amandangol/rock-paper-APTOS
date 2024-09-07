@@ -97,6 +97,7 @@ Aptos is a Layer 1 blockchain that offers high throughput and low transaction co
 - styled-components for styling
 - @aptos-labs/wallet-adapter-react for wallet connection
 - Aptos SDK for interacting with the blockchain
+- Aptos Move for the smart contract.
 - Ant Design for UI components
 
 ## How the Reward System Works

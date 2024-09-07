@@ -1,9 +1,9 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Card, Badge, Button, Spin } from 'antd';
+import {Spin } from 'antd';
 import { LockOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { Achievement } from '../types/types';
-import { AchievementDescription, AchievementTitle, ClaimedText, RewardAmount, StyledBadge, StyledButton, StyledCard } from '../styles/StyledComponents';
+import { AchievementDescription, ClaimedText, RewardAmount, StyledButton, StyledCard } from '../styles/StyledComponents';
 
 interface AchievementCardProps {
   achievement: Achievement | null;

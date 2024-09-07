@@ -42,7 +42,7 @@ const GameHistory: React.FC<GameHistoryProps> = ({ history, getGameHistory }) =>
       dataIndex: 'balanceChange',
       key: 'balanceChange',
       render: (balanceChange: number) => {
-        const formattedChange = balanceChange.toFixed(2);
+        // const formattedChange = balanceChange.toFixed(2);
         const color = balanceChange > 0 ? 'green' : balanceChange < 0 ? 'red' : 'black';
         const sign = balanceChange > 0 ? '+' : balanceChange < 0 ? '-' : '';
         return <span style={{ color }}>{sign}{Math.abs(balanceChange)} APT</span>;

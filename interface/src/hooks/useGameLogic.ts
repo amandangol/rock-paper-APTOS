@@ -28,7 +28,7 @@ export const useGameLogic = () => {
   const [playerBalance, setPlayerBalance] = useState<number | null>(null);
   const [recentTransactions, setRecentTransactions] = useState<Array<{ type: string, amount: number, timestamp: number }>>([]);
   const [recentRewards, setRecentRewards] = useState<Array<{ id: number, amount: number, timestamp: number }>>([]);
-  
+
 
 
   const fetchClaimedRewards = useCallback(async () => {
@@ -69,6 +69,8 @@ export const useGameLogic = () => {
     const fetchedHistory = await apiUtils.fetchGameHistory(client, account);
     setHistory(fetchedHistory);
   }, [account]);
+
+
 
   const fetchAchievementsWithTimeout = useCallback(async () => {
     setIsAchievementsLoading(true);

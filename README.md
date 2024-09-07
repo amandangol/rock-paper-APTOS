@@ -55,6 +55,10 @@ Aptos is a Layer 1 blockchain that offers high throughput and low transaction co
    - Animated game elements for an engaging user experience.
    - Clear visual feedback for game outcomes and balance changes.
    - Sleek stat cards displaying player and AI performance metrics.
+  
+## Game Demo
+
+   https://github.com/user-attachments/assets/176278c0-1033-49a2-b507-a4c9dfe14c3a
 
 ## Getting Started
 
@@ -93,6 +97,7 @@ Aptos is a Layer 1 blockchain that offers high throughput and low transaction co
 - styled-components for styling
 - @aptos-labs/wallet-adapter-react for wallet connection
 - Aptos SDK for interacting with the blockchain
+- Aptos Move for the smart contract.
 - Ant Design for UI components
 
 ## How the Reward System Works

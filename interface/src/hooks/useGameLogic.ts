@@ -3,7 +3,7 @@ import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { AptosClient, CoinClient } from "aptos";
 import { message } from 'antd';
 import { GameState, GameEvent, Achievement } from '../types/types';
-import { checkGameInitialization, initializeGame, fetchGameHistory, playMove, fetchAchievements, claimReward, fetchClaimedRewards, fetchWalletBalance, fetchResourceBalance, fundGame } from '../utils/apiUtils';
+import * as apiUtils from '../utils/apiUtils';
 
 const client = new AptosClient('https://fullnode.testnet.aptoslabs.com/v1');
 const coinClient = new CoinClient(client);
@@ -22,7 +22,6 @@ export const useGameLogic = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isGameInitialized, setIsGameInitialized] = useState(false);
   const [claimedRewards, setClaimedRewards] = useState<number[]>([]);
-  const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [resourceBalance, setResourceBalance] = useState<number | null>(null);
   const [fundAmount, setFundAmount] = useState<string>('');
   const [isAchievementsLoading, setIsAchievementsLoading] = useState(false);
@@ -32,45 +31,42 @@ export const useGameLogic = () => {
   
 
 
+  const fetchClaimedRewards = useCallback(async () => {
+    if (!account) return;
+    try {
+      const fetchedClaimedRewards = await apiUtils.fetchClaimedRewards(client, account);
+      setClaimedRewards(fetchedClaimedRewards);
+      localStorage.setItem('claimedRewards', JSON.stringify(fetchedClaimedRewards));
+    } catch (error) {
+      console.error("Error fetching claimed rewards:", error);
+    }
+  }, [account]);
 
-  useEffect(() => {
+  const initializeGameState = useCallback(async () => {
     if (connected && account) {
-      checkGameInitialization(client, account, setGameState, setIsGameInitialized, setIsLoading);
-      getGameHistory(); // Fetch initial game history
+      await apiUtils.checkGameInitialization(client, account, setGameState, setIsGameInitialized, setIsLoading);
+      await getGameHistory();
+      await fetchAchievementsWithTimeout();
+      await fetchClaimedRewards();
+      await apiUtils.fetchResourceBalance(client, coinClient, setResourceBalance);
+      await fetchPlayerBalance();
     } else {
       setIsLoading(false);
       setIsGameInitialized(false);
       setGameState(null);
-      setHistory([]); // Clear history when disconnected
+      setHistory([]);
+      setAchievements([]);
+      setClaimedRewards([]);
     }
   }, [connected, account]);
-
 
   useEffect(() => {
-    if (connected && account) {
-      fetchClaimedRewards(client, account, setClaimedRewards);
-      fetchWalletBalance(coinClient, account, setWalletBalance);
-    }
-  }, [connected, account]);
-
-  const handleInitializeGame = useCallback(async () => {
-    if (!account) return;
-    setIsLoading(true);
-    try {
-      await initializeGame(signAndSubmitTransaction, client);
-      message.success("Game initialized successfully!");
-      await checkGameInitialization(client, account, setGameState, setIsGameInitialized, setIsLoading);
-    } catch (error) {
-      console.error("Error initializing game:", error);
-      message.error("Failed to initialize game");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [account, signAndSubmitTransaction]);
+    initializeGameState();
+  }, [initializeGameState]);
 
   const getGameHistory = useCallback(async () => {
     if (!account) return;
-    const fetchedHistory = await fetchGameHistory(client, account);
+    const fetchedHistory = await apiUtils.fetchGameHistory(client, account);
     setHistory(fetchedHistory);
   }, [account]);
 
@@ -81,10 +77,9 @@ export const useGameLogic = () => {
         setTimeout(() => reject(new Error('Achievement fetch timeout')), 10000)
       );
       await Promise.race([
-        fetchAchievements(client, account!, setAchievements),
+        apiUtils.fetchAchievements(client, account!, setAchievements),
         timeoutPromise
       ]);
-      // Load claimed rewards from local storage
       const storedClaimedRewards = JSON.parse(localStorage.getItem('claimedRewards') || '[]');
       setClaimedRewards(storedClaimedRewards);
     } catch (error) {
@@ -94,61 +89,63 @@ export const useGameLogic = () => {
       setIsAchievementsLoading(false);
     }
   }, [account]);
-  
-  useEffect(() => {
-    if (connected && account) {
-      checkGameInitialization(client, account, setGameState, setIsGameInitialized, setIsLoading);
-      getGameHistory();
-      fetchAchievementsWithTimeout();
-    } else {
+
+  const handleInitializeGame = useCallback(async () => {
+    if (!account) return;
+    setIsLoading(true);
+    try {
+      await apiUtils.initializeGame(signAndSubmitTransaction, client);
+      message.success("Game initialized successfully!");
+      await initializeGameState();
+    } catch (error) {
+      console.error("Error initializing game:", error);
+      message.error("Failed to initialize game");
+    } finally {
       setIsLoading(false);
-      setIsGameInitialized(false);
-      setGameState(null);
-      setHistory([]);
-      setAchievements([]);
     }
-  }, [connected, account, fetchAchievementsWithTimeout]);
+  }, [account, signAndSubmitTransaction, initializeGameState]);
 
   const handlePlayMove = useCallback(async (moveIndex: number) => {
     if (!account || !isGameInitialized) return;
     setIsLoading(true);
     try {
-      const result = await playMove(signAndSubmitTransaction, client, account, moveIndex);
+      const result = await apiUtils.playMove(signAndSubmitTransaction, client, account, moveIndex);
       setLastResult(result);
       setIsModalVisible(true);
-      await checkGameInitialization(client, account, setGameState, setIsGameInitialized, setIsLoading);
-      await fetchAchievements(client, account, setAchievements);
-      await getGameHistory(); // Update history immediately after a move
+      
+      if (result?.result === "You Win! 🎉") {
+        const rewardAmount = 0.02; // 0.02 APT
+        setPlayerBalance((prevBalance) => (prevBalance || 0) + rewardAmount);
+        setResourceBalance((prevBalance) => (prevBalance || 0) - rewardAmount);
+        setRecentTransactions(prev => [...prev, { type: 'Win Reward', amount: rewardAmount, timestamp: Date.now() }]);
+        message.success(`You won ${rewardAmount} APT!`);
+      } else if (result?.result === "AI Wins 🤖") {
+        const penaltyAmount = 0.01; // 0.01 APT
+        setPlayerBalance((prevBalance) => (prevBalance || 0) - penaltyAmount);
+        setResourceBalance((prevBalance) => (prevBalance || 0) + penaltyAmount);
+        setRecentTransactions(prev => [...prev, { type: 'Loss Penalty', amount: -penaltyAmount, timestamp: Date.now() }]);
+        message.warning(`You lost ${penaltyAmount} APT.`);
+      }
+      
+      await initializeGameState();
     } catch (error) {
       console.error("Error playing game:", error);
       message.error("Failed to submit move");
     } finally {
       setIsLoading(false);
     }
-  }, [account, signAndSubmitTransaction, isGameInitialized, getGameHistory]);
-
-
-  useEffect(() => {
-    if (connected && account) {
-      fetchResourceBalance(client, coinClient, setResourceBalance);
-    }
-  }, [connected, account]);
-
-  const fetchPlayerBalance = useCallback(async () => {
-    if (!account) return;
-    const balance = await coinClient.checkBalance(account.address);
-    setPlayerBalance(Number(balance) / 100000000); // Convert from Octas to APT
-  }, [account, coinClient]);
+  }, [account, signAndSubmitTransaction, isGameInitialized, initializeGameState]);
 
   const handleFundGame = useCallback(async () => {
     if (!account || !connected) return;
     setIsLoading(true);
     try {
-      await fundGame(signAndSubmitTransaction, client, coinClient, account, fundAmount);
+      await apiUtils.fundGame(signAndSubmitTransaction, client, coinClient, account, fundAmount);
       message.success(`Successfully funded ${fundAmount} APT to the game!`);
       setRecentTransactions(prev => [...prev, { type: 'Fund', amount: Number(fundAmount), timestamp: Date.now() }]);
       setFundAmount('');
-      await fetchResourceBalance(client, coinClient, setResourceBalance);
+      await apiUtils.fetchResourceBalance(client, coinClient, setResourceBalance);
+      await fetchPlayerBalance();
     } catch (error) {
       console.error("Error funding game:", error);
       message.error("Failed to fund game");
@@ -161,30 +158,43 @@ export const useGameLogic = () => {
     if (!account || !isGameInitialized) return;
     setIsLoading(true);
     try {
-      const rewardAmount = await claimReward(signAndSubmitTransaction, client, achievementId);
+      const rewardAmount = await apiUtils.claimReward(signAndSubmitTransaction, client, achievementId);
       setRecentRewards(prev => [...prev, { id: achievementId, amount: rewardAmount, timestamp: Date.now() }]);
+      
+      // Update local state
       setAchievements(prevAchievements =>
         prevAchievements.map(ach =>
           ach.id === achievementId ? { ...ach, claimed: true } : ach
         )
       );
-      setClaimedRewards(prev => [...prev, achievementId]);
-      await fetchResourceBalance(client, coinClient, setResourceBalance);
+      setClaimedRewards(prev => {
+        const newClaimedRewards = [...prev, achievementId];
+        localStorage.setItem('claimedRewards', JSON.stringify(newClaimedRewards));
+        return newClaimedRewards;
+      });
+
+      await apiUtils.fetchResourceBalance(client, coinClient, setResourceBalance);
       await fetchPlayerBalance();
-      message.success(`Reward of ${rewardAmount} APT claimed successfully!`);
+      message.success(`Reward of ${rewardAmount / 100000000} APT claimed successfully!`);
     } catch (error) {
       console.error("Error claiming reward:", error);
       message.error("Failed to claim reward: " + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsLoading(false);
     }
-  }, [account, signAndSubmitTransaction, isGameInitialized, client, coinClient]);  useEffect(() => {
-    if (connected && account) {
-      fetchPlayerBalance();
-    }
-  }, [connected, account, fetchPlayerBalance]);
+  }, [account, signAndSubmitTransaction, isGameInitialized]);
 
+  useEffect(() => {
+    initializeGameState();
+  }, [initializeGameState]);
 
+  const fetchPlayerBalance = useCallback(async () => {
+    if (!account) return;
+    const balance = await coinClient.checkBalance(account.address);
+    setPlayerBalance(Number(balance) / 100000000); // Convert from Octas to APT
+  }, [account]);
+
+  
   return {
     gameState,
     history,
@@ -194,9 +204,12 @@ export const useGameLogic = () => {
     isLoading,
     isGameInitialized,
     claimedRewards,
-    walletBalance,
     resourceBalance,
     fundAmount,
+    playerBalance,
+    recentTransactions,
+    recentRewards,
+    isAchievementsLoading,
     setIsModalVisible,
     setFundAmount,
     handleInitializeGame,
@@ -204,16 +217,8 @@ export const useGameLogic = () => {
     handleClaimReward,
     handleFundGame,
     getGameHistory,
-    isAchievementsLoading,
-    playerBalance,
-    recentTransactions,
-    recentRewards,
-
+    getRewardAmount: apiUtils.getRewardAmount,
   };
 };
 
 export default useGameLogic;
-function getRewardAmount(achievementId: number) {
-  throw new Error('Function not implemented.');
-}
-

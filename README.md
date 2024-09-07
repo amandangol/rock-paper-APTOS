@@ -17,100 +17,35 @@ Aptos is a Layer 1 blockchain that offers high throughput and low transaction co
 - **Achievements System**: Blockchain-verified accomplishments.
 - **Reward Claiming**: Token-based incentives for gameplay.
 - **Game Funding**: Players can contribute funds to the prize pool.
+- **Player Balance**: Real-time display of player's APT balance.
+- **Recent Transactions**: Track recent game fundings and reward claims.
+- **Resource Balance**: View the current balance of the game's resource account.
 
-## Smart Contract Overview
+## New Features
 
-The Move smart contract manages core game logic, achievements and rewards. Below are the key elements:
+1. **Player Balance Component**:
 
-### 1. Game Initialization
+   - Real-time display of the player's APT balance.
+   - Updates automatically after transactions.
 
-The contract allows each player to initialize their game state on the Aptos blockchain.
+2. **Game Funding System**:
 
-```move
-public entry fun initialize_game(account: &signer) {
-    let account_addr = signer::address_of(account);
-    // Initializes game state, achievements, and reward structures
-}
-```
+   - Players can contribute APT to the game's prize pool.
+   - Enhances engagement and increases potential rewards.
 
-### 2. Real-time Gameplay
+3. **Recent Transactions Tracking**:
 
-Players choose Rock, Paper, or Scissors, and the contract determines the result against an AI opponent.
+   - Displays recent game fundings and reward claims.
+   - Provides transparency and a history of player interactions.
 
-```move
-public entry fun play_game(account: &signer, player_choice: u8) {
-    // Validates player choice and determines the winner
-}
-```
+4. **Resource Account Balance**:
 
-### 3. Game History
+   - Shows the current balance of the game's resource account.
+   - Allows players to see the total available rewards.
 
-All games are recorded on-chain, providing transparency and verifiability of results.
-
-```move
-#[view]
-public fun get_game_state(account_addr: address): (u64, u64, u64, u64, vector<GameResult>, u64) {
-    // Returns the game state for the specified player
-}
-```
-
-### 4. Achievements System
-
-Players can unlock achievements based on their performance, which are tracked on-chain.
-
-Achievements include:
-
-- First Win
-- Win 10 Games
-- 5-game Winning Streak
-- Play 5 or 10 Games
-
-```move
-fun check_and_update_achievements(account_addr: address) {
-    // Checks if the player qualifies for new achievements and unlocks them
-}
-```
-
-### 5. Rewards
-
-Players can claim rewards in AptosCoin (APT) for unlocking achievements, with specific reward amounts based on the achievement type.
-
-Achievements and rewards:
-
-- **First Win**: 0.05 APT
-- **Ten Wins**: 0.2 APT
-- **Winning Streak**: 0.1 APT
-- **First Game**: 0.01 APT
-- **Five Games**: 0.05 APT
-- **Ten Games**: 0.1 APT
-
-```move
-public entry fun claim_reward(account: &signer, achievement_id: u64) {
-    // Transfers reward to the player after they unlock an achievement
-}
-```
-
-### 6. Game Funding
-
-Players can contribute AptosCoins (APT) to the game’s prize pool using the `fund_game` function.
-
-```move
-public entry fun fund_game(funder: &signer, amount: u64) {
-    // Adds funds to the global prize pool
-}
-```
-
-### 7. Random AI Moves
-
-The contract generates AI moves using timestamp-based randomness.
-
-```move
-fun generate_ai_choice(game_state: &GameState): u8 {
-    // Generates a random AI choice (Rock, Paper, or Scissors)
-}
-```
-
-![alt text](image.png)
+5. **Enhanced Error Handling**:
+   - Improved error messages for better user experience.
+   - Timeout handling for achievement fetching to prevent UI freezes.
 
 ## Getting Started
 
@@ -122,27 +57,18 @@ fun generate_ai_choice(game_state: &GameState): u8 {
    ```
    npm install
    ```
-3. **Generate your module address and initialize your account**:
-
-   ```
-   aptos init
-   ```
-
-   Choose `testnet` when prompted.
-
-4. **Compile the Move module**:
+3. **Set up your Aptos account**:
+   - Install the Aptos CLI
+   - Run `aptos init` and choose `testnet` when prompted
+4. **Compile and publish the Move module**:
    ```
    aptos move compile
-   ```
-5. **Publish the module**:
-
-   ```
    aptos move publish
    ```
-
-   Confirm the transaction when prompted.
-
-6. Note the account address output during initialization. You'll use this as your `MODULE_ADDRESS` and `rock_paper_scissors`.
+5. **Start the React app**:
+   ```
+   npm start
+   ```
 
 ## Prerequisites
 
@@ -158,16 +84,19 @@ fun generate_ai_choice(game_state: &GameState): u8 {
 - styled-components for styling
 - @aptos-labs/wallet-adapter-react for wallet connection
 - Aptos SDK for interacting with the blockchain
+- Ant Design for UI components
 
 ## Future Improvements
 
 - Multiplayer mode
 - Additional game modes (e.g., Rock Paper Scissors Lizard Spock)
+- Leaderboard system
+- Social features (e.g., friend challenges, tournaments)
 
-## Troubleshooting
+## Contributing
 
-- Ensure your wallet is connected to the correct network.
-- Verify you have enough APT for transaction fees.
-- Clear the browser cache if issues persist.
+We welcome contributions! Please feel free to submit a Pull Request.
 
-We hope you enjoy the game!
+## License
+
+This project is licensed under the MIT License.

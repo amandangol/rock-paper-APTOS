@@ -65,7 +65,20 @@ const ArcadeButton = styled.button`
     box-shadow: 0 0 10px #ff3333;
   }
 `;
-;
+
+
+const RewardText = styled.div`
+  font-size: 18px;
+  margin-top: 10px;
+`;
+
+const WinText = styled(RewardText)`
+  color: #ffd700;
+`;
+
+const LossText = styled(RewardText)`
+  color: #ff4d4d;
+`;
 
 const ResultModal: React.FC<ResultModalProps> = ({ isVisible, onClose, result }) => (
   <ArcadeModal
@@ -88,6 +101,12 @@ const ResultModal: React.FC<ResultModalProps> = ({ isVisible, onClose, result })
         <div>AI: {(result?.aiMove || '')} </div>
       </MoveDisplay>
       <ResultDisplay>{result?.result}</ResultDisplay>
+      {result?.result === "You Win! 🎉" && (
+        <WinText>You won 0.02 APT!</WinText>
+      )}
+      {result?.result === "AI Wins 🤖" && (
+        <LossText>You lost 0.01 APT.</LossText>
+      )}
       <ArcadeButton onClick={onClose}>CONTINUE?</ArcadeButton>
     </ArcadeScreen>
   </ArcadeModal>

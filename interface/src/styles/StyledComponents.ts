@@ -233,7 +233,7 @@ export const StyledTable = styled(Table)`
   }
 `;
 
-export const AchievementCard = styled(Card)`
+export const StyledCard = styled(Card)`
   background: rgba(255, 255, 255, 0.9);
   border-radius: 15px;
   margin-top: 20px;
@@ -242,7 +242,7 @@ export const AchievementCard = styled(Card)`
   max-width: 800px;
 `;
 
-export const AchievementBadge = styled(Badge)`
+export const StyledBadge = styled(Badge)`
   .ant-badge-count {
     background-color: #52c41a;
     color: #fff;
@@ -250,7 +250,14 @@ export const AchievementBadge = styled(Badge)`
   }
 `;
 
-export const RewardButton = styled(Button)`
+export const IconWrapper = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+`;
+
+export const StyledButton = styled(Button)`
   background-color: #ffd700;
   border-color: #ffd700;
   color: #000;
@@ -261,6 +268,27 @@ export const RewardButton = styled(Button)`
   }
 `;
 
+export const AchievementTitle = styled.h3`
+  font-size: 18px;
+  margin-bottom: 10px;
+`;
+
+export const AchievementDescription = styled.p`
+  font-size: 14px;
+  color: #666;
+`;
+
+export const RewardAmount = styled.p`
+  font-size: 16px;
+  font-weight: bold;
+  color: #1890ff;
+`;
+
+export const ClaimedText = styled.p`
+  font-size: 16px;
+  color: #52c41a;
+  font-weight: bold;
+`;
 export const HeroSection = styled.section`
   display: flex;
   flex-direction: column;

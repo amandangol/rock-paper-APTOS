@@ -15,17 +15,13 @@ export const checkGameInitialization = async (
       account.address,
       `${MODULE_ADDRESS}::rock_paper_scissors::GameState`
     );
-    if (resource && 'data' in resource) {
-      setGameState(resource.data as GameState);
-      setIsGameInitialized(true);
-    } else {
-      setIsGameInitialized(false);
-      setGameState(null);
-    }
+    const isInitialized = resource && 'data' in resource;
+    setGameState(isInitialized ? resource.data as GameState : null);
+    setIsGameInitialized(isInitialized);
   } catch (error) {
     console.error("Error checking game initialization:", error);
-    setIsGameInitialized(false);
     setGameState(null);
+    setIsGameInitialized(false);
   } finally {
     setIsLoading(false);
   }
@@ -41,8 +37,8 @@ export const initializeGame = async (
     type_arguments: [],
     arguments: [],
   };
-  const response = await signAndSubmitTransaction(payload);
-  await client.waitForTransaction(response.hash);
+  const { hash } = await signAndSubmitTransaction(payload);
+  await client.waitForTransaction(hash);
 };
 
 export const fetchGameHistory = async (
@@ -50,12 +46,11 @@ export const fetchGameHistory = async (
   account: { address: string }
 ): Promise<GameEvent[]> => {
   try {
-    const events = await client.getEventsByEventHandle(
+    return await client.getEventsByEventHandle(
       account.address,
       `${MODULE_ADDRESS}::rock_paper_scissors::GameEventHandle`,
       "game_events"
-    );
-    return events as GameEvent[];
+    ) as GameEvent[];
   } catch (error) {
     console.error("Error fetching game history:", error);
     return [];
@@ -74,8 +69,8 @@ export const playMove = async (
     type_arguments: [],
     arguments: [moveIndex],
   };
-  const response = await signAndSubmitTransaction(payload);
-  await client.waitForTransaction(response.hash);
+  const { hash } = await signAndSubmitTransaction(payload);
+  await client.waitForTransaction(hash);
 
   const events = await client.getEventsByEventHandle(
     account.address,
@@ -99,31 +94,24 @@ export const fetchAchievements = async (
   account: { address: string },
   setAchievements: React.Dispatch<React.SetStateAction<Achievement[]>>
 ) => {
-  console.log("Fetching achievements for account:", account.address);
   try {
     const resourceType = `${MODULE_ADDRESS}::rock_paper_scissors::Achievements`;
-    console.log("Querying resource type:", resourceType);
-    
     const achievementsResource = await client.getAccountResource(
       account.address,
       resourceType
     );
-    console.log("Raw achievements resource:", achievementsResource);
 
     if (achievementsResource && 'data' in achievementsResource) {
       const data = achievementsResource.data as AchievementsResource;
-      console.log("Achievements data:", data);
-
       if (Array.isArray(data.achievements)) {
-        const formattedAchievements = data.achievements.map(ach => ({
+        setAchievements(data.achievements.map(ach => ({
           id: Number(ach.id),
           name: ach.name,
+          title: ach.title,
           description: ach.description,
           unlocked: ach.unlocked,
           claimed: false
-        }));
-        console.log("Formatted achievements:", formattedAchievements);
-        setAchievements(formattedAchievements);
+        })));
       } else {
         console.error("Achievements data is not an array:", data.achievements);
         setAchievements([]);
@@ -134,25 +122,19 @@ export const fetchAchievements = async (
     }
   } catch (error) {
     console.error("Error fetching achievements:", error);
-    if (error instanceof Error) {
-      console.error("Error message:", error.message);
-      console.error("Error stack:", error.stack);
-    }
     setAchievements([]);
   }
 };
 
 export const getRewardAmount = (achievementId: number): number => {
-  // Define reward amounts for each achievement (in APT)
   const rewardAmounts: { [key: number]: number } = {
-    1: 0.05,  // ACHIEVEMENT_FIRST_WIN
-    2: 0.2,   // ACHIEVEMENT_TEN_WINS
-    3: 0.1,   // ACHIEVEMENT_WINNING_STREAK
-    4: 0.01,  // ACHIEVEMENT_FIRST_GAME
-    5: 0.05,  // ACHIEVEMENT_FIVE_GAMES
-    6: 0.1,   // ACHIEVEMENT_TEN_GAMES
+    1: 5_000_000,  // 0.05 APT
+    2: 20_000_000, // 0.2 APT
+    3: 10_000_000, // 0.1 APT
+    4: 1_000_000,  // 0.01 APT
+    5: 5_000_000,  // 0.05 APT
+    6: 10_000_000, // 0.1 APT
   };
-
   return rewardAmounts[achievementId] || 0;
 };
 
@@ -168,41 +150,28 @@ export const claimReward = async (
     arguments: [achievementId],
   };
 
-  const response = await signAndSubmitTransaction(payload);
-  await client.waitForTransaction(response.hash);
+  const { hash } = await signAndSubmitTransaction(payload);
+  await client.waitForTransaction(hash);
 
   return getRewardAmount(achievementId);
 };
 
-
 export const fetchClaimedRewards = async (
   client: AptosClient,
-  account: { address: string },
-  setClaimedRewards: React.Dispatch<React.SetStateAction<number[]>>
-) => {
+  account: { address: string }
+): Promise<number[]> => {
   try {
     const resource = await client.getAccountResource(
       account.address,
       `${MODULE_ADDRESS}::rock_paper_scissors::RewardClaim`
     );
     if (resource && 'data' in resource) {
-      setClaimedRewards((resource.data as any).claimed_rewards);
+      return (resource.data as any).claimed_rewards;
     }
+    return [];
   } catch (error) {
     console.error("Error fetching claimed rewards:", error);
-  }
-};
-
-export const fetchWalletBalance = async (
-  coinClient: CoinClient,
-  account: { address: string },
-  setWalletBalance: React.Dispatch<React.SetStateAction<number | null>>
-) => {
-  try {
-    const balance = await coinClient.checkBalance(account.address);
-    setWalletBalance(Number(balance));
-  } catch (error) {
-    console.error("Error fetching wallet balance:", error);
+    return [];
   }
 };
 
@@ -212,21 +181,21 @@ export const fetchResourceBalance = async (
   setResourceBalance: React.Dispatch<React.SetStateAction<number | null>>
 ) => {
   try {
-    const resourceAccountAddress = await client.view({
+    const [resourceAccountAddress] = await client.view({
       function: `${MODULE_ADDRESS}::rock_paper_scissors::get_resource_account_address`,
       type_arguments: [],
       arguments: []
     });
     
-    if (resourceAccountAddress && resourceAccountAddress.length > 0) {
-      const balance = await client.view({
+    if (resourceAccountAddress) {
+      const [balance] = await client.view({
         function: `${MODULE_ADDRESS}::rock_paper_scissors::get_game_balance`,
         type_arguments: [],
         arguments: []
       });
       
-      if (balance && balance.length > 0) {
-        setResourceBalance(Number(balance[0]) / 100000000); // Convert from Octas to APT
+      if (balance) {
+        setResourceBalance(Number(balance) / 100000000); // Convert from Octas to APT
       } else {
         console.error("Invalid balance returned");
       }
@@ -235,29 +204,6 @@ export const fetchResourceBalance = async (
     }
   } catch (error) {
     console.error("Error fetching resource balance:", error);
-  }
-};
-
-export const fetchTreasuryBalance = async (
-  client: AptosClient,
-  coinClient: CoinClient,
-  setTreasuryBalance: React.Dispatch<React.SetStateAction<number | null>>
-) => {
-  try {
-    const treasuryAddress = await client.view({
-      function: `${MODULE_ADDRESS}::rock_paper_scissors::get_treasury_address`,
-      type_arguments: [],
-      arguments: []
-    });
-    
-    if (treasuryAddress && treasuryAddress.length > 0) {
-      const balance = await coinClient.checkBalance(treasuryAddress[0] as string);
-      setTreasuryBalance(Number(balance) / 100000000); // Convert from Octas to APT
-    } else {
-      console.error("Invalid treasury address returned");
-    }
-  } catch (error) {
-    console.error("Error fetching treasury balance:", error);
   }
 };
 
@@ -276,6 +222,6 @@ export const fundGame = async (
     type_arguments: [],
     arguments: [amountInOctas.toString()],
   };
-  const response = await signAndSubmitTransaction(payload);
-  await client.waitForTransaction(response.hash);
+  const { hash } = await signAndSubmitTransaction(payload);
+  await client.waitForTransaction(hash);
 };

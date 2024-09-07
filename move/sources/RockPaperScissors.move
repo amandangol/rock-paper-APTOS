@@ -23,15 +23,18 @@ module rock_paper_scissors::rock_paper_scissors {
     const REWARD_FIRST_GAME: u64 = 1_000_000; // 0.01 APT
     const REWARD_FIVE_GAMES: u64 = 5_000_000; // 0.05 APT
     const REWARD_TEN_GAMES: u64 = 10_000_000; // 0.1 APT
+    const REWARD_PER_WIN: u64 = 3_000_000; // 0.02 APT
+    const PENALTY_PER_LOSS: u64 = 1_000_000; // 0.01 APT
+
 
     const E_INVALID_CHOICE: u64 = 1;
     const E_REWARD_CLAIM_NOT_EXISTS: u64 = 2;
     const E_ACHIEVEMENT_NOT_UNLOCKED: u64 = 3;
     const E_REWARD_ALREADY_CLAIMED: u64 = 4;
     const E_APTOS_COIN_NOT_REGISTERED: u64 = 5;
+    const E_INSUFFICIENT_PLAYER_BALANCE: u64 = 6;
     const E_INSUFFICIENT_GAME_BALANCE: u64 = 8;
     const E_INSUFFICIENT_FUNDING_AMOUNT: u64 = 7;
-
 
     const ACHIEVEMENT_FIRST_WIN: u64 = 1;
     const ACHIEVEMENT_TEN_WINS: u64 = 2;
@@ -39,6 +42,7 @@ module rock_paper_scissors::rock_paper_scissors {
     const ACHIEVEMENT_FIRST_GAME: u64 = 4;
     const ACHIEVEMENT_FIVE_GAMES: u64 = 5;
     const ACHIEVEMENT_TEN_GAMES: u64 = 6;
+
 
     // Structs
     struct GameResult has store, drop, copy {
@@ -181,7 +185,7 @@ module rock_paper_scissors::rock_paper_scissors {
         coin::merge(&mut game_resources.balance, coins);
     }
 
-    public entry fun play_game(account: &signer, player_choice: u8) acquires GameState, GameEventHandle, Achievements {
+      public entry fun play_game(account: &signer, player_choice: u8) acquires GameState, GameEventHandle, Achievements, GameResources {
         let account_addr = signer::address_of(account);
         
         if (!exists<GameState>(account_addr)) {
@@ -201,9 +205,11 @@ module rock_paper_scissors::rock_paper_scissors {
         if (result == PLAYER_WINS) {
             game_state.player_wins = game_state.player_wins + 1;
             game_state.current_streak = game_state.current_streak + 1;
+            transfer_win_reward(account);
         } else if (result == AI_WINS) {
             game_state.ai_wins = game_state.ai_wins + 1;
             game_state.current_streak = 0;
+            transfer_loss_penalty(account);
         } else {
             game_state.draws = game_state.draws + 1;
         };
@@ -233,6 +239,27 @@ module rock_paper_scissors::rock_paper_scissors {
 
         check_and_update_achievements(account_addr);
     }
+
+    fun transfer_win_reward(account: &signer) acquires GameResources {
+        let account_addr = signer::address_of(account);
+        let game_resources = borrow_global_mut<GameResources>(@rock_paper_scissors);
+        
+        assert!(coin::value(&game_resources.balance) >= REWARD_PER_WIN, E_INSUFFICIENT_GAME_BALANCE);
+        
+        let coins = coin::extract(&mut game_resources.balance, REWARD_PER_WIN);
+        coin::deposit(account_addr, coins);
+    }
+
+    fun transfer_loss_penalty(account: &signer) acquires GameResources {
+        let account_addr = signer::address_of(account);
+        let game_resources = borrow_global_mut<GameResources>(@rock_paper_scissors);
+        
+        assert!(coin::balance<AptosCoin>(account_addr) >= PENALTY_PER_LOSS, E_INSUFFICIENT_PLAYER_BALANCE);
+        
+        let coins = coin::withdraw<AptosCoin>(account, PENALTY_PER_LOSS);
+        coin::merge(&mut game_resources.balance, coins);
+    }
+
 
     // View functions
     #[view]

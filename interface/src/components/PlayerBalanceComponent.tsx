@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Typography } from 'antd';
+import { Card, Typography, Spin } from 'antd';
 import { WalletOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 
@@ -47,6 +47,12 @@ const BalanceText = styled(Text)`
   color: #4ade80;
 `;
 
+const StyledSpin = styled(Spin)`
+  .ant-spin-dot-item {
+    background-color: #4ade80;
+  }
+`;
+
 const PlayerBalanceComponent: React.FC<PlayerBalanceProps> = ({ playerBalance }) => {
   return (
     <div style={{ position: 'fixed', top: '70px', right: '16px', zIndex: 100 }}>
@@ -57,15 +63,16 @@ const PlayerBalanceComponent: React.FC<PlayerBalanceProps> = ({ playerBalance })
           </IconWrapper>
           <TextWrapper>
             <BalanceLabel>Your Balance</BalanceLabel>
-            <BalanceText>
-              {playerBalance !== null ? `${playerBalance.toFixed(2)} APT` : 'Loading...'}
-            </BalanceText>
+            {playerBalance !== null ? (
+              <BalanceText>{playerBalance.toFixed(2)} APT</BalanceText>
+            ) : (
+              <StyledSpin size="small" />
+            )}
           </TextWrapper>
         </CardContent>
       </StyledCard>
     </div>
   );
 };
-
 
 export default PlayerBalanceComponent;

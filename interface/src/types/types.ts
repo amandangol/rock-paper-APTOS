@@ -16,6 +16,7 @@ export interface GameEvent {
 }
 
 export interface Achievement {
+  title: string;
   id: number;
   name: string;
   description: string;

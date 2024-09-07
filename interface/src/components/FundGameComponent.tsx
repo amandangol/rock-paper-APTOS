@@ -1,12 +1,16 @@
 import React from 'react';
-import { Card, Typography } from 'antd';
-import { MoneyCollectOutlined } from '@ant-design/icons';
+import { Card, Typography, Spin } from 'antd';
+import { DollarOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 
 const { Text } = Typography;
 
 interface FundGameComponentProps {
   resourceBalance: number | null;
+  fundAmount: string;
+  setFundAmount: React.Dispatch<React.SetStateAction<string>>;
+  handleFundGame: () => Promise<void>;
+  isLoading: boolean;
 }
 
 const StyledCard = styled(Card)`
@@ -26,7 +30,7 @@ const IconWrapper = styled.div`
   margin-right: 12px;
 `;
 
-const StyledMoneyCollectOutlined = styled(MoneyCollectOutlined)`
+const StyledMoneyCollectOutlined = styled(DollarOutlined)`
   font-size: 24px;
   color: white;
 `;
@@ -47,7 +51,19 @@ const BalanceText = styled(Text)`
   color: #4ade80;
 `;
 
-const FundGameComponent: React.FC<FundGameComponentProps> = ({ resourceBalance }) => {
+const StyledSpin = styled(Spin)`
+  .ant-spin-dot-item {
+    background-color: #4ade80;
+  }
+`;
+
+const  FundGameComponent: React.FC<FundGameComponentProps> = ({
+  resourceBalance,
+  fundAmount,
+  setFundAmount,
+  handleFundGame,
+  isLoading
+}) => {
   return (
     <div style={{ position: 'fixed', top: '140px', right: '16px', zIndex: 100 }}>
       <StyledCard bodyStyle={{ padding: 0 }}>
@@ -57,10 +73,13 @@ const FundGameComponent: React.FC<FundGameComponentProps> = ({ resourceBalance }
           </IconWrapper>
           <TextWrapper>
             <BalanceLabel>Game Balance</BalanceLabel>
-            <BalanceText>
-              {resourceBalance !== null ? `${resourceBalance.toFixed(2)} APT` : 'Loading...'}
-            </BalanceText>
+            {resourceBalance !== null ? (
+              <BalanceText>{resourceBalance.toFixed(2)} APT</BalanceText>
+            ) : (
+              <StyledSpin size="small" />
+            )}
           </TextWrapper>
+          
         </CardContent>
       </StyledCard>
     </div>
@@ -68,3 +87,4 @@ const FundGameComponent: React.FC<FundGameComponentProps> = ({ resourceBalance }
 };
 
 export default FundGameComponent;
+

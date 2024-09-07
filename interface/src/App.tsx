@@ -39,6 +39,8 @@ const App: React.FC = () => {
     setFundAmount,
     handleFundGame,
     getRewardAmount,
+    claimingReward,
+    handleClaimStatusChange,
   } = useGameLogic();
 
   
@@ -70,6 +72,9 @@ const App: React.FC = () => {
               isLoading={isLoading}
               claimedRewards={claimedRewards}
               getRewardAmount={getRewardAmount}
+              claimingReward={claimingReward}
+              onClaimStatusChange={handleClaimStatusChange}
+
             />
           </Col>
         ))}

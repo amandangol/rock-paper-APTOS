@@ -1,4 +1,4 @@
-import { AptosClient, CoinClient, Types } from "aptos";
+import { AptosClient, CoinClient, Types} from "aptos";
 import { GameState, GameEvent, Achievement, AchievementsResource } from '../types/types';
 import { MODULE_ADDRESS, MOVES, RESULTS } from '../constants/gameConstants';
 
@@ -57,6 +57,7 @@ export const fetchGameHistory = async (
   }
 };
 
+
 export const playMove = async (
   signAndSubmitTransaction: (payload: Types.TransactionPayload) => Promise<{ hash: string }>,
   client: AptosClient,
@@ -70,23 +71,29 @@ export const playMove = async (
     arguments: [moveIndex],
   };
   const { hash } = await signAndSubmitTransaction(payload);
-  await client.waitForTransaction(hash);
-
-  const events = await client.getEventsByEventHandle(
-    account.address,
-    `${MODULE_ADDRESS}::rock_paper_scissors::GameEventHandle`,
-    "game_events"
-  );
   
-  if (events.length > 0) {
-    const latestEvent = events[events.length - 1] as GameEvent;
-    return {
-      playerMove: MOVES[Number(latestEvent.data.player_choice)],
-      aiMove: MOVES[Number(latestEvent.data.ai_choice)],
-      result: RESULTS[Number(latestEvent.data.result)],
-    };
+  // Wait for the transaction to be confirmed
+  const txnResult = await client.waitForTransactionWithResult(hash);
+  
+  if ('success' in txnResult && txnResult.success && txnResult.vm_status === "Executed successfully") {
+    // Fetch the latest event after the transaction is confirmed
+    const events = await client.getEventsByEventHandle(
+      account.address,
+      `${MODULE_ADDRESS}::rock_paper_scissors::GameEventHandle`,
+      "game_events"
+    );
+    
+    if (events.length > 0) {
+      const latestEvent = events[events.length - 1] as GameEvent;
+      return {
+        playerMove: MOVES[Number(latestEvent.data.player_choice)],
+        aiMove: MOVES[Number(latestEvent.data.ai_choice)],
+        result: RESULTS[Number(latestEvent.data.result)],
+      };
+    }
   }
-  return null;
+  
+  throw new Error("Failed to process move or fetch result");
 };
 
 export const fetchAchievements = async (

@@ -55,10 +55,10 @@ Aptos is a Layer 1 blockchain that offers high throughput and low transaction co
    - Animated game elements for an engaging user experience.
    - Clear visual feedback for game outcomes and balance changes.
    - Sleek stat cards displaying player and AI performance metrics.
-  
+
 ## Game Demo
 
-   https://github.com/user-attachments/assets/176278c0-1033-49a2-b507-a4c9dfe14c3a
+https://github.com/user-attachments/assets/176278c0-1033-49a2-b507-a4c9dfe14c3a
 
 ## Getting Started
 
@@ -116,13 +116,14 @@ The game provides a comprehensive view of both player and AI performance:
 - **Player Stats**: Tracks the number of wins, losses, and draws for the human player.
 - **AI Stats**: Keeps count of the AI's wins.
 - **Visual Representation**: Utilizes sleek, easy-to-read stat cards for quick performance assessment.
+- **Progress Bars**: Each statistic includes a progress bar, visually representing its proportion to the total games played.
 - **Real-time Updates**: Statistics are updated immediately after each game.
 
 These statistics allow players to track their progress, analyze their performance against the AI, and strive for improvement.
 
 ## UI/UX Highlights
 
-Our game boasts a slick and intuitive user interface designed for an optimal gaming experience:
+The game boasts a slick and intuitive user interface designed for an optimal gaming experience:
 
 - **Clean, Modern Design**: A visually appealing layout that's easy on the eyes.
 - **Responsive Interface**: Adapts seamlessly to different screen sizes and devices.

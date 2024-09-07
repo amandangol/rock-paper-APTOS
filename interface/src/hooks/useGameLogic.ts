@@ -28,18 +28,41 @@ export const useGameLogic = () => {
   const [playerBalance, setPlayerBalance] = useState<number | null>(null);
   const [recentTransactions, setRecentTransactions] = useState<Array<{ type: string, amount: number, timestamp: number }>>([]);
   const [recentRewards, setRecentRewards] = useState<Array<{ id: number, amount: number, timestamp: number }>>([]);
+  const [claimingReward, setClaimingReward] = useState<number | null>(null);
 
 
   const fetchClaimedRewards = useCallback(async () => {
-    if (!account) return;
+    if (!account) return [];
     try {
       const fetchedClaimedRewards = await apiUtils.fetchClaimedRewards(client, account);
-      setClaimedRewards(fetchedClaimedRewards);
-      localStorage.setItem('claimedRewards', JSON.stringify(fetchedClaimedRewards));
+      return fetchedClaimedRewards;
     } catch (error) {
       console.error("Error fetching claimed rewards:", error);
+      return [];
     }
-  }, [account]);
+  }, [account, client]);
+
+  useEffect(() => {
+    const storedClaimedRewards = JSON.parse(localStorage.getItem('claimedRewards') || '[]');
+    setClaimedRewards(storedClaimedRewards);
+  }, []);
+
+  useEffect(() => {
+    const loadClaimedRewards = async () => {
+      const fetchedClaimedRewards = await fetchClaimedRewards();
+      setClaimedRewards(fetchedClaimedRewards);
+    };
+
+    loadClaimedRewards();
+  }, [fetchClaimedRewards]);
+
+  const handleClaimStatusChange = (achievementId: number, claimed: boolean) => {
+    if (claimed) {
+      setClaimedRewards(prev => [...prev, achievementId]);
+    } else {
+      setClaimedRewards(prev => prev.filter(id => id !== achievementId));
+    }
+  };
 
   const initializeGameState = useCallback(async () => {
     if (connected && account) {
@@ -67,6 +90,13 @@ export const useGameLogic = () => {
     if (!account) return;
     const fetchedHistory = await apiUtils.fetchGameHistory(client, account);
     setHistory(fetchedHistory);
+  }, [account]);
+
+  
+  const fetchPlayerBalance = useCallback(async () => {
+    if (!account) return;
+    const balance = await coinClient.checkBalance(account.address);
+    setPlayerBalance(Number(balance) / 100000000); // Convert from Octas to APT
   }, [account]);
 
 
@@ -114,13 +144,13 @@ export const useGameLogic = () => {
       setLastResult(result);
       setIsModalVisible(true);
       
-      if (result?.result === "You Win! 🎉") {
+      if (result.result === "You Win! 🎉") {
         const rewardAmount = 0.02; // 0.02 APT
         setPlayerBalance((prevBalance) => (prevBalance || 0) + rewardAmount);
         setResourceBalance((prevBalance) => (prevBalance || 0) - rewardAmount);
         setRecentTransactions(prev => [...prev, { type: 'Win Reward', amount: rewardAmount, timestamp: Date.now() }]);
         message.success(`You won ${rewardAmount} APT!`);
-      } else if (result?.result === "AI Wins 🤖") {
+      } else if (result.result === "AI Wins 🤖") {
         const penaltyAmount = 0.01; // 0.01 APT
         setPlayerBalance((prevBalance) => (prevBalance || 0) - penaltyAmount);
         setResourceBalance((prevBalance) => (prevBalance || 0) + penaltyAmount);
@@ -131,7 +161,8 @@ export const useGameLogic = () => {
       await initializeGameState();
     } catch (error) {
       console.error("Error playing game:", error);
-      message.error("Failed to submit move");
+      message.error("Failed to submit move or retrieve result. Please try again.");
+      setLastResult(null);
     } finally {
       setIsLoading(false);
     }
@@ -157,43 +188,51 @@ export const useGameLogic = () => {
 
   const handleClaimReward = useCallback(async (achievementId: number) => {
     if (!account || !isGameInitialized) return;
-    setIsLoading(true);
+    setClaimingReward(achievementId);
     try {
+      const initialBalance = await coinClient.checkBalance(account.address);
       const rewardAmount = await apiUtils.claimReward(signAndSubmitTransaction, client, achievementId);
-      setRecentRewards(prev => [...prev, { id: achievementId, amount: rewardAmount, timestamp: Date.now() }]);
       
-      // Update local state
-      setAchievements(prevAchievements =>
-        prevAchievements.map(ach =>
-          ach.id === achievementId ? { ...ach, claimed: true } : ach
-        )
-      );
-      setClaimedRewards(prev => {
-        const newClaimedRewards = [...prev, achievementId];
-        localStorage.setItem('claimedRewards', JSON.stringify(newClaimedRewards));
-        return newClaimedRewards;
-      });
-
-      await apiUtils.fetchResourceBalance(client, coinClient, setResourceBalance);
-      await fetchPlayerBalance();
-      message.success(`Reward of ${rewardAmount / 100000000} APT claimed successfully!`);
+      // Wait for the balance to update
+      let attempts = 0;
+      const maxAttempts = 10;
+      while (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for 2 seconds
+        const newBalance = await coinClient.checkBalance(account.address);
+        if (newBalance > initialBalance) {
+          // Balance has increased, reward has been credited
+          setClaimedRewards(prev => {
+            const newClaimedRewards = [...prev, achievementId];
+            localStorage.setItem('claimedRewards', JSON.stringify(newClaimedRewards));
+            return newClaimedRewards;
+          });
+          setRecentRewards(prev => [...prev, { id: achievementId, amount: rewardAmount, timestamp: Date.now() }]);
+          setAchievements(prevAchievements =>
+            prevAchievements.map(ach =>
+              ach.id === achievementId ? { ...ach, claimed: true } : ach
+            )
+          );
+          await apiUtils.fetchResourceBalance(client, coinClient, setResourceBalance);
+          await fetchPlayerBalance();
+          message.success(`Reward of ${rewardAmount / 100000000} APT claimed successfully!`);
+          break;
+        }
+        attempts++;
+      }
+      if (attempts === maxAttempts) {
+        message.warning("Reward claimed, but balance update is taking longer than expected. Please check your balance later.");
+      }
     } catch (error) {
       console.error("Error claiming reward:", error);
       message.error("Failed to claim reward: " + (error instanceof Error ? error.message : String(error)));
     } finally {
-      setIsLoading(false);
+      setClaimingReward(null);
     }
-  }, [account, signAndSubmitTransaction, isGameInitialized]);
+  }, [account, signAndSubmitTransaction, isGameInitialized, client, coinClient, fetchPlayerBalance]);
 
   useEffect(() => {
     initializeGameState();
   }, [initializeGameState]);
-
-  const fetchPlayerBalance = useCallback(async () => {
-    if (!account) return;
-    const balance = await coinClient.checkBalance(account.address);
-    setPlayerBalance(Number(balance) / 100000000); // Convert from Octas to APT
-  }, [account]);
 
   
   return {
@@ -218,6 +257,8 @@ export const useGameLogic = () => {
     handleClaimReward,
     handleFundGame,
     getGameHistory,
+    claimingReward,
+    handleClaimStatusChange,
     getRewardAmount: apiUtils.getRewardAmount,
   };
 };

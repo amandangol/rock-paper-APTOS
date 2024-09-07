@@ -29,7 +29,9 @@ module rock_paper_scissors::rock_paper_scissors {
     const E_ACHIEVEMENT_NOT_UNLOCKED: u64 = 3;
     const E_REWARD_ALREADY_CLAIMED: u64 = 4;
     const E_APTOS_COIN_NOT_REGISTERED: u64 = 5;
-    const E_INSUFFICIENT_BALANCE: u64 = 6;
+    const E_INSUFFICIENT_GAME_BALANCE: u64 = 8;
+    const E_INSUFFICIENT_FUNDING_AMOUNT: u64 = 7;
+
 
     const ACHIEVEMENT_FIRST_WIN: u64 = 1;
     const ACHIEVEMENT_TEN_WINS: u64 = 2;
@@ -140,7 +142,7 @@ module rock_paper_scissors::rock_paper_scissors {
         };
     }
 
-    public entry fun claim_reward(account: &signer, achievement_id: u64) acquires RewardClaim, Achievements, RewardEventHandle, GameResources {
+   public entry fun claim_reward(account: &signer, achievement_id: u64) acquires RewardClaim, Achievements, RewardEventHandle, GameResources {
         let account_addr = signer::address_of(account);
         
         assert!(exists<RewardClaim>(account_addr), E_REWARD_CLAIM_NOT_EXISTS);
@@ -156,7 +158,7 @@ module rock_paper_scissors::rock_paper_scissors {
         assert!(coin::is_account_registered<AptosCoin>(account_addr), E_APTOS_COIN_NOT_REGISTERED);
 
         let game_resources = borrow_global_mut<GameResources>(@rock_paper_scissors);
-        assert!(coin::value(&game_resources.balance) >= reward_amount, E_INSUFFICIENT_BALANCE);
+        assert!(coin::value(&game_resources.balance) >= reward_amount, E_INSUFFICIENT_GAME_BALANCE);
         
         let coins = coin::extract(&mut game_resources.balance, reward_amount);
         coin::deposit(account_addr, coins);
@@ -172,7 +174,8 @@ module rock_paper_scissors::rock_paper_scissors {
         });
     }
 
-    public entry fun fund_game(funder: &signer, amount: u64) acquires GameResources {
+  public entry fun fund_game(funder: &signer, amount: u64) acquires GameResources {
+        assert!(amount > 0, E_INSUFFICIENT_FUNDING_AMOUNT);
         let game_resources = borrow_global_mut<GameResources>(@rock_paper_scissors);
         let coins = coin::withdraw<AptosCoin>(funder, amount);
         coin::merge(&mut game_resources.balance, coins);
@@ -264,6 +267,12 @@ module rock_paper_scissors::rock_paper_scissors {
     #[view]
     public fun get_claimed_rewards(account_addr: address): vector<u64> acquires RewardClaim {
         *&borrow_global<RewardClaim>(account_addr).claimed_rewards
+    }
+
+    // Add this new view function
+    #[view]
+    public fun get_resource_account_address(): address {
+        @rock_paper_scissors
     }
 
     // Private helper functions

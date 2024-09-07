@@ -4,17 +4,19 @@ import { useGameLogic } from './hooks/useGameLogic';
 import GameHeader from './components/GameHeader';
 import GameFooter from './components/GameFooter';
 import HeroSection from './components/HeroSection';
-import {GamePlayArea} from './components/GamePlayArea';
-import {EnhancedStatCard} from './components/EnhancedStatCard';
+import { GamePlayArea } from './components/GamePlayArea';
+import { EnhancedStatCard } from './components/EnhancedStatCard';
 import GameHistory from './components/GameHistory';
 import AchievementCard from './components/AchievementCard';
 import ResultModal from './components/ResultModal';
 import LoadingOverlay from './components/LoadingOverlay';
+import PlayerBalanceComponent from './components/PlayerBalanceComponent';
 import { GameWrapper, GameContent, StatsRow, GameTabs } from './styles/StyledComponents';
 import { Alert, Col, Row, Spin } from 'antd';
 import TabPane from 'antd/es/tabs/TabPane';
+import FundGameComponent from './components/FundGameComponent';
 
-const App: React.FC = () => {
+const App = () => {
   const { connected } = useWallet();
   const {
     gameState,
@@ -30,12 +32,25 @@ const App: React.FC = () => {
     handleClaimReward,
     setIsModalVisible,
     getGameHistory,
-    isAchievementsLoading
+    isAchievementsLoading,
+    playerBalance,
+    resourceBalance,
+    fundAmount,
+    setFundAmount,
+    handleFundGame,
   } = useGameLogic();
 
   return (
     <GameWrapper>
       <GameHeader />
+      {connected && <PlayerBalanceComponent playerBalance={playerBalance} />}
+      {connected &&  <FundGameComponent
+        resourceBalance={resourceBalance}
+        // fundAmount={fundAmount}
+        // setFundAmount={setFundAmount}
+        // handleFundGame={handleFundGame}
+        // isLoading={isLoading}
+      />}
       <GameContent>
         {isLoading && <LoadingOverlay />}
         {connected ? (
@@ -62,35 +77,35 @@ const App: React.FC = () => {
                     </Col>
                   </StatsRow>
                 )}
-               <GameTabs defaultActiveKey="1">
-        <TabPane tab="Game History" key="1">
-          <GameHistory history={history} getGameHistory={getGameHistory} />
-        </TabPane>
-        <TabPane tab="Achievements" key="2">
-          {isAchievementsLoading ? (
-            <Spin tip="Loading achievements..." />
-          ) : achievements.length > 0 ? (
-            <Row gutter={[16, 16]}>
-              {achievements.map((achievement) => (
-                <Col key={achievement.id} span={8}>
-                  <AchievementCard
+                <GameTabs defaultActiveKey="1">
+                  <TabPane tab="Game History" key="1">
+                    <GameHistory history={history} getGameHistory={getGameHistory} />
+                  </TabPane>
+                  <TabPane tab="Achievements" key="2">
+                    {isAchievementsLoading ? (
+                      <Spin tip="Loading achievements..." />
+                    ) : achievements.length > 0 ? (
+                      <Row gutter={[16, 16]}>
+                        {achievements.map((achievement) => (
+                          <Col key={achievement.id} span={8}>
+                            <AchievementCard
                     achievement={achievement}
-                    claimedRewards={claimedRewards}
                     claimReward={handleClaimReward}
                     isLoading={isLoading}
+                    claimedRewards={claimedRewards}
                   />
-                </Col>
-              ))}
-            </Row>
-          ) : (
-            <Alert
-              message="No achievements found"
-              description="Play your first game to earn achievements!"
-              type="warning"
-            />
-          )}
-        </TabPane>
-      </GameTabs>
+                          </Col>
+                        ))}
+                      </Row>
+                    ) : (
+                      <Alert
+                        message="No achievements found"
+                        description="Play your first game to earn achievements!"
+                        type="warning"
+                      />
+                    )}
+                  </TabPane>
+                </GameTabs>
                 <ResultModal
                   isVisible={isModalVisible}
                   onClose={() => setIsModalVisible(false)}

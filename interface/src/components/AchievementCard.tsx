@@ -5,17 +5,17 @@ import { AchievementBadge, RewardButton } from '../styles/StyledComponents';
 
 interface AchievementCardProps {
   achievement: Achievement | null;
-  claimedRewards: number[];
   claimReward: (achievementId: number) => void;
   isLoading: boolean;
+  claimedRewards: number[];
 }
 
-const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, claimedRewards, claimReward, isLoading }) => {
+const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, claimReward, isLoading, claimedRewards }) => {
   if (!achievement) {
     return <Spin />;
   }
 
-  console.log("Rendering achievement:", achievement);
+  const isClaimed = claimedRewards.includes(achievement.id);
 
   return (
     <AchievementBadge count={achievement.unlocked ? '✓' : 0}>
@@ -25,12 +25,12 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, claimedR
         style={{ opacity: achievement.unlocked ? 1 : 0.6 }}
       >
         <p>{achievement.description}</p>
-        {achievement.unlocked && !claimedRewards.includes(achievement.id) && (
+        {achievement.unlocked && !isClaimed && (
           <RewardButton onClick={() => claimReward(achievement.id)} disabled={isLoading}>
             Claim Reward
           </RewardButton>
         )}
-        {claimedRewards.includes(achievement.id) && (
+        {isClaimed && (
           <p style={{ color: 'green' }}>Reward Claimed!</p>
         )}
       </Card>

@@ -9,9 +9,9 @@ const client = new AptosClient('https://fullnode.testnet.aptoslabs.com/v1');
 const coinClient = new CoinClient(client);
 
 export const useGameLogic = () => {
-    const { account, signAndSubmitTransaction, connected } = useWallet();
-    const [gameState, setGameState] = useState<GameState | null>(null);
-    const [history, setHistory] = useState<GameEvent[]>([]);
+  const { account, signAndSubmitTransaction, connected } = useWallet();
+  const [gameState, setGameState] = useState<GameState | null>(null);
+  const [history, setHistory] = useState<GameEvent[]>([]);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [lastResult, setLastResult] = useState<{
@@ -26,6 +26,11 @@ export const useGameLogic = () => {
   const [resourceBalance, setResourceBalance] = useState<number | null>(null);
   const [fundAmount, setFundAmount] = useState<string>('');
   const [isAchievementsLoading, setIsAchievementsLoading] = useState(false);
+  const [playerBalance, setPlayerBalance] = useState<number | null>(null);
+  const [recentTransactions, setRecentTransactions] = useState<Array<{ type: string, amount: number, timestamp: number }>>([]);
+  const [recentRewards, setRecentRewards] = useState<Array<{ id: number, amount: number, timestamp: number }>>([]);
+  
+
 
 
   useEffect(() => {
@@ -79,6 +84,9 @@ export const useGameLogic = () => {
         fetchAchievements(client, account!, setAchievements),
         timeoutPromise
       ]);
+      // Load claimed rewards from local storage
+      const storedClaimedRewards = JSON.parse(localStorage.getItem('claimedRewards') || '[]');
+      setClaimedRewards(storedClaimedRewards);
     } catch (error) {
       console.error('Error fetching achievements:', error);
       setAchievements([]);
@@ -86,7 +94,7 @@ export const useGameLogic = () => {
       setIsAchievementsLoading(false);
     }
   }, [account]);
-
+  
   useEffect(() => {
     if (connected && account) {
       checkGameInitialization(client, account, setGameState, setIsGameInitialized, setIsLoading);
@@ -119,66 +127,93 @@ export const useGameLogic = () => {
     }
   }, [account, signAndSubmitTransaction, isGameInitialized, getGameHistory]);
 
+
+  useEffect(() => {
+    if (connected && account) {
+      fetchResourceBalance(client, coinClient, setResourceBalance);
+    }
+  }, [connected, account]);
+
+  const fetchPlayerBalance = useCallback(async () => {
+    if (!account) return;
+    const balance = await coinClient.checkBalance(account.address);
+    setPlayerBalance(Number(balance) / 100000000); // Convert from Octas to APT
+  }, [account, coinClient]);
+
+  const handleFundGame = useCallback(async () => {
+    if (!account || !connected) return;
+    setIsLoading(true);
+    try {
+      await fundGame(signAndSubmitTransaction, client, coinClient, account, fundAmount);
+      message.success(`Successfully funded ${fundAmount} APT to the game!`);
+      setRecentTransactions(prev => [...prev, { type: 'Fund', amount: Number(fundAmount), timestamp: Date.now() }]);
+      setFundAmount('');
+      await fetchResourceBalance(client, coinClient, setResourceBalance);
+    } catch (error) {
+      console.error("Error funding game:", error);
+      message.error("Failed to fund game");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [account, connected, signAndSubmitTransaction, fundAmount]);
+
   const handleClaimReward = useCallback(async (achievementId: number) => {
     if (!account || !isGameInitialized) return;
     setIsLoading(true);
     try {
-      await claimReward(signAndSubmitTransaction, client, achievementId);
-      setAchievements(prevAchievements => 
-        prevAchievements.map(ach => 
-          ach.id === achievementId ? {...ach, claimed: true} : ach
+      const rewardAmount = await claimReward(signAndSubmitTransaction, client, achievementId);
+      setRecentRewards(prev => [...prev, { id: achievementId, amount: rewardAmount, timestamp: Date.now() }]);
+      setAchievements(prevAchievements =>
+        prevAchievements.map(ach =>
+          ach.id === achievementId ? { ...ach, claimed: true } : ach
         )
       );
       setClaimedRewards(prev => [...prev, achievementId]);
-      await fetchWalletBalance(coinClient, account, setWalletBalance);
-      message.success(`Reward claimed successfully!`);
+      await fetchResourceBalance(client, coinClient, setResourceBalance);
+      await fetchPlayerBalance();
+      message.success(`Reward of ${rewardAmount} APT claimed successfully!`);
     } catch (error) {
       console.error("Error claiming reward:", error);
       message.error("Failed to claim reward: " + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsLoading(false);
     }
-  }, [account, signAndSubmitTransaction, isGameInitialized]);
+  }, [account, signAndSubmitTransaction, isGameInitialized, client, coinClient]);  useEffect(() => {
+    if (connected && account) {
+      fetchPlayerBalance();
+    }
+  }, [connected, account, fetchPlayerBalance]);
 
-  const handleFundGame = useCallback(async () => {
-    if (!account || !connected) return;
-    setIsLoading(true);
-    try {
-        await fundGame(signAndSubmitTransaction, client, coinClient, account, fundAmount);
-        message.success(`Successfully funded ${fundAmount} APT to the game!`);
-        setFundAmount('');
-        await fetchResourceBalance(client, coinClient, setResourceBalance);
-        await fetchWalletBalance(coinClient, account, setWalletBalance);
-      } catch (error) {
-        console.error("Error funding game:", error);
-        message.error("Failed to fund game: " + (error instanceof Error ? error.message : String(error)));
-      } finally {
-        setIsLoading(false);
-      }
-    }, [account, connected, signAndSubmitTransaction, fundAmount]);
 
-   
-  
-    return {
-      gameState,
-      history,
-      achievements,
-      isModalVisible,
-      lastResult,
-      isLoading,
-      isGameInitialized,
-      claimedRewards,
-      walletBalance,
-      resourceBalance,
-      fundAmount,
-      setIsModalVisible,
-      setFundAmount,
-      handleInitializeGame,
-      handlePlayMove,
-      handleClaimReward,
-      handleFundGame,
-      getGameHistory,
-      isAchievementsLoading,
+  return {
+    gameState,
+    history,
+    achievements,
+    isModalVisible,
+    lastResult,
+    isLoading,
+    isGameInitialized,
+    claimedRewards,
+    walletBalance,
+    resourceBalance,
+    fundAmount,
+    setIsModalVisible,
+    setFundAmount,
+    handleInitializeGame,
+    handlePlayMove,
+    handleClaimReward,
+    handleFundGame,
+    getGameHistory,
+    isAchievementsLoading,
+    playerBalance,
+    recentTransactions,
+    recentRewards,
 
-    };
   };
+};
+
+export default useGameLogic;
+function getRewardAmount(achievementId: number) {
+  throw new Error('Function not implemented.');
+}
+

@@ -142,6 +142,20 @@ export const fetchAchievements = async (
   }
 };
 
+export const getRewardAmount = (achievementId: number): number => {
+  // Define reward amounts for each achievement (in APT)
+  const rewardAmounts: { [key: number]: number } = {
+    1: 0.05,  // ACHIEVEMENT_FIRST_WIN
+    2: 0.2,   // ACHIEVEMENT_TEN_WINS
+    3: 0.1,   // ACHIEVEMENT_WINNING_STREAK
+    4: 0.01,  // ACHIEVEMENT_FIRST_GAME
+    5: 0.05,  // ACHIEVEMENT_FIVE_GAMES
+    6: 0.1,   // ACHIEVEMENT_TEN_GAMES
+  };
+
+  return rewardAmounts[achievementId] || 0;
+};
+
 export const claimReward = async (
   signAndSubmitTransaction: (payload: Types.TransactionPayload) => Promise<{ hash: string }>,
   client: AptosClient,
@@ -153,9 +167,13 @@ export const claimReward = async (
     type_arguments: [],
     arguments: [achievementId],
   };
+
   const response = await signAndSubmitTransaction(payload);
   await client.waitForTransaction(response.hash);
+
+  return getRewardAmount(achievementId);
 };
+
 
 export const fetchClaimedRewards = async (
   client: AptosClient,
@@ -201,8 +219,17 @@ export const fetchResourceBalance = async (
     });
     
     if (resourceAccountAddress && resourceAccountAddress.length > 0) {
-      const balance = await coinClient.checkBalance(resourceAccountAddress[0] as string);
-      setResourceBalance(Number(balance));
+      const balance = await client.view({
+        function: `${MODULE_ADDRESS}::rock_paper_scissors::get_game_balance`,
+        type_arguments: [],
+        arguments: []
+      });
+      
+      if (balance && balance.length > 0) {
+        setResourceBalance(Number(balance[0]) / 100000000); // Convert from Octas to APT
+      } else {
+        console.error("Invalid balance returned");
+      }
     } else {
       console.error("Invalid resource account address returned");
     }
@@ -211,6 +238,30 @@ export const fetchResourceBalance = async (
   }
 };
 
+export const fetchTreasuryBalance = async (
+  client: AptosClient,
+  coinClient: CoinClient,
+  setTreasuryBalance: React.Dispatch<React.SetStateAction<number | null>>
+) => {
+  try {
+    const treasuryAddress = await client.view({
+      function: `${MODULE_ADDRESS}::rock_paper_scissors::get_treasury_address`,
+      type_arguments: [],
+      arguments: []
+    });
+    
+    if (treasuryAddress && treasuryAddress.length > 0) {
+      const balance = await coinClient.checkBalance(treasuryAddress[0] as string);
+      setTreasuryBalance(Number(balance) / 100000000); // Convert from Octas to APT
+    } else {
+      console.error("Invalid treasury address returned");
+    }
+  } catch (error) {
+    console.error("Error fetching treasury balance:", error);
+  }
+};
+
+
 export const fundGame = async (
   signAndSubmitTransaction: (payload: Types.TransactionPayload) => Promise<{ hash: string }>,
   client: AptosClient,
@@ -218,7 +269,7 @@ export const fundGame = async (
   account: { address: string },
   fundAmount: string
 ) => {
-  const amountInOctas = Math.floor(parseFloat(fundAmount) * 100000000);
+  const amountInOctas = Math.floor(parseFloat(fundAmount) * 100000000); // Convert APT to Octas
   const payload = {
     type: "entry_function_payload",
     function: `${MODULE_ADDRESS}::rock_paper_scissors::fund_game`,

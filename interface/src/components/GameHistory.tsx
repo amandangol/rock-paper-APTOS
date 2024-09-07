@@ -53,7 +53,7 @@ const GameHistory: React.FC<GameHistoryProps> = ({ history, getGameHistory }) =>
   const tableData = history.map((item: GameEvent, index: number) => {
     let balanceChange = 0;
     if (Number(item.data.result) === 0) { // Player wins
-      balanceChange = 0.03;
+      balanceChange = 0.02;
     } else if (Number(item.data.result) === 1) { // AI wins
       balanceChange = -0.01;
     }

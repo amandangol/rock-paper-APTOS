@@ -102,11 +102,12 @@ const ResultModal: React.FC<ResultModalProps> = ({ isVisible, onClose, result })
       </MoveDisplay>
       <ResultDisplay>{result?.result}</ResultDisplay>
       {result?.result === "You Win! 🎉" && (
-        <WinText>You won 0.03 APT!</WinText>
+        <WinText>You won 0.02 APT!</WinText>
       )}
       {result?.result === "AI Wins 🤖" && (
         <LossText>You lost 0.01 APT.</LossText>
       )}
+      <br></br>
       <ArcadeButton onClick={onClose}>CONTINUE?</ArcadeButton>
     </ArcadeScreen>
   </ArcadeModal>

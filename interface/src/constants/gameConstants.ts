@@ -1,4 +1,4 @@
 export const MOVES = ["🪨", "📃", "✂️"];
 export const MOVE_NAMES = ["Rock", "Paper", "Scissors"];
 export const RESULTS = ["You Win! 🎉", "AI Wins 🤖", "Draw 🤝"];
-export const MODULE_ADDRESS = "0xaa6c438e72075b0cd27ce9422e1039d53dc07ac25a933f82880ac00074caaad2";
+export const MODULE_ADDRESS = "0x6bb6051e941f5793481aa249a98f8c2fabc4079772f3e70d82322a6a9be70025";

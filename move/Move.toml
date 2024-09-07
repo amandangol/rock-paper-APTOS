@@ -6,5 +6,5 @@ version = "1.0.0"
 AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework/", rev = "main" }
 
 [addresses]
-rock_paper_scissors = "0xaa6c438e72075b0cd27ce9422e1039d53dc07ac25a933f82880ac00074caaad2"
+rock_paper_scissors = "0x6bb6051e941f5793481aa249a98f8c2fabc4079772f3e70d82322a6a9be70025"
 resource_address = "0xb54799efab3416a2022d0042964127a57b6e70b04975577425d4f2aee0b74aa9" 

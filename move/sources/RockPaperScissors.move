@@ -23,7 +23,7 @@ module rock_paper_scissors::rock_paper_scissors {
     const REWARD_FIRST_GAME: u64 = 1_000_000; // 0.01 APT
     const REWARD_FIVE_GAMES: u64 = 5_000_000; // 0.05 APT
     const REWARD_TEN_GAMES: u64 = 10_000_000; // 0.1 APT
-    const REWARD_PER_WIN: u64 = 3_000_000; // 0.03 APT
+    const REWARD_PER_WIN: u64 = 2_000_000; // 0.02 APT
     const PENALTY_PER_LOSS: u64 = 1_000_000; // 0.01 APT
 
 

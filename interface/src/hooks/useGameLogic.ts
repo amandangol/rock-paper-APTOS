@@ -30,7 +30,6 @@ export const useGameLogic = () => {
   const [recentRewards, setRecentRewards] = useState<Array<{ id: number, amount: number, timestamp: number }>>([]);
 
 
-
   const fetchClaimedRewards = useCallback(async () => {
     if (!account) return;
     try {

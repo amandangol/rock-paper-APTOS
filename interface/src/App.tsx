@@ -41,6 +41,8 @@ const App: React.FC = () => {
     getRewardAmount,
   } = useGameLogic();
 
+  
+
   const renderGameStats = () => (
     <StatsRow gutter={16} justify="center">
       <Col span={8}>

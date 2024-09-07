@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import {Spin } from 'antd';
 import { LockOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { Achievement } from '../types/types';
-import { AchievementDescription, ClaimedText, RewardAmount, StyledButton, StyledCard } from '../styles/StyledComponents';
+import { AchievementDescription, AchievementTitle, ClaimedText, RewardAmount, StyledButton, StyledCard } from '../styles/StyledComponents';
 
 interface AchievementCardProps {
   achievement: Achievement | null;
@@ -62,6 +62,7 @@ const AchievementCard: React.FC<AchievementCardProps> = ({
       <IconWrapper>
         {renderIcon()}
       </IconWrapper>
+      <AchievementTitle>{achievement.name}</AchievementTitle>
       <AchievementDescription>{achievement.description}</AchievementDescription>
       <RewardAmount>Reward: {rewardAmountInAPT} APT</RewardAmount>
       {achievement.unlocked && !isClaimed && (

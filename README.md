@@ -60,7 +60,7 @@ Aptos is a Layer 1 blockchain that offers high throughput and low transaction co
 
 1. **Clone the repository**:
    ```
-   git clone https://github.com/your-username/aptos-rock-paper-scissors.git
+   git clone https://github.com/amandangol/rock-paper-APTOS.git
    ```
 2. **Install dependencies**:
    ```
@@ -97,7 +97,7 @@ Aptos is a Layer 1 blockchain that offers high throughput and low transaction co
 
 ## How the Reward System Works
 
-- When a player wins a game, they receive 0.03 APT as a reward.
+- When a player wins a game, they receive 0.02 APT as a reward.
 - When a player loses a game, they lose 0.01 APT as a penalty.
 - The player's balance is updated in real-time after each game.
 - Achievement rewards are additional bonuses that players can claim based on their performance.

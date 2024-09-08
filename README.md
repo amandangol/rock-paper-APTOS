@@ -51,10 +51,14 @@ Aptos is a Layer 1 blockchain that offers high throughput and low transaction co
    - Presented in an easy-to-read format for quick performance assessment.
 
 7. **Slick and Intuitive UI**:
+
    - Modern, responsive design that works seamlessly across devices.
    - Animated game elements for an engaging user experience.
    - Clear visual feedback for game outcomes and balance changes.
    - Sleek stat cards displaying player and AI performance metrics.
+
+8. _Funding wallet feature_:
+   - The code includes functions like fundGame and handleFundGame, which allow players to add funds to the game's wallet. There's also a fundAmount state and a setter setFundAmount. However, these are not exposed in the UI.
 
 ## Game Demo
 

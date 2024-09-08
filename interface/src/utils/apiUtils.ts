@@ -68,33 +68,36 @@
       type: "entry_function_payload",
       function: `${MODULE_ADDRESS}::rock_paper_scissors::play_game`,
       type_arguments: [],
-      arguments: [moveIndex],
+      arguments: [moveIndex.toString()], // Convert to string to ensure it's treated as a u8
     };
-    const { hash } = await signAndSubmitTransaction(payload);
     
-    // Wait for the transaction to be confirmed
-    const txnResult = await client.waitForTransactionWithResult(hash);
-    
-    if ('success' in txnResult && txnResult.success && txnResult.vm_status === "Executed successfully") {
-      // Fetch the latest event after the transaction is confirmed
-      const events = await client.getEventsByEventHandle(
-        account.address,
-        `${MODULE_ADDRESS}::rock_paper_scissors::GameEventHandle`,
-        "game_events"
-      );
+    try {
+      const { hash } = await signAndSubmitTransaction(payload);
+      const txnResult = await client.waitForTransactionWithResult(hash);
       
-      if (events.length > 0) {
-        const latestEvent = events[events.length - 1] as GameEvent;
-        return {
-          playerMove: MOVES[Number(latestEvent.data.player_choice)],
-          aiMove: MOVES[Number(latestEvent.data.ai_choice)],
-          result: RESULTS[Number(latestEvent.data.result)],
-        };
+      if ('success' in txnResult && txnResult.success) {
+        const events = await client.getEventsByEventHandle(
+          account.address,
+          `${MODULE_ADDRESS}::rock_paper_scissors::GameEventHandle`,
+          "game_events"
+        );
+        
+        if (events.length > 0) {
+          const latestEvent = events[events.length - 1] as GameEvent;
+          return {
+            playerMove: MOVES[Number(latestEvent.data.player_choice)],
+            aiMove: MOVES[Number(latestEvent.data.ai_choice)],
+            result: RESULTS[Number(latestEvent.data.result)],
+          };
+        }
       }
+      
+      throw new Error("Transaction failed or no event was emitted");
+    } catch (error) {
+      console.error("Error playing move:", error);
+      throw new Error("Failed to process move: " + (error instanceof Error ? error.message : String(error)));
     }
-    
-    throw new Error("Failed to process move or fetch result");
-  };
+  };  
 
   export const fetchAchievements = async (
     client: AptosClient,

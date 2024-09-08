@@ -59,11 +59,9 @@ Aptos is a Layer 1 blockchain that offers high throughput and low transaction co
 
 8. _Funding wallet feature_:
    - The code includes functions like fundGame and handleFundGame, which allow players to add funds to the game's wallet. There's also a fundAmount state and a setter setFundAmount. However, these are not exposed in the UI.
-
-     
-8. _Funding wallet feature_:
+9. _Funding wallet feature_:
    - The code includes functions like fundGame and handleFundGame, which allow players to add funds to the game's wallet. There's also a fundAmount state and a setter setFundAmount. However, these are not exposed in the UI.
-     
+
 ## Game Demo
 
 https://github.com/user-attachments/assets/176278c0-1033-49a2-b507-a4c9dfe14c3a

@@ -4,6 +4,7 @@ module rock_paper_scissors::rock_paper_scissors {
     use aptos_framework::event;
     use aptos_framework::timestamp;
     use aptos_framework::coin;
+    use aptos_framework::randomness;
     use aptos_framework::aptos_coin::AptosCoin;
     use std::vector;
     use std::string::{Self, String};
@@ -75,6 +76,7 @@ module rock_paper_scissors::rock_paper_scissors {
         recent_games: vector<GameResult>,
         current_streak: u64,
         last_timestamp: u64,
+        ai_choice: u8,
     }
 
     struct GameEvent has drop, store {
@@ -123,6 +125,7 @@ module rock_paper_scissors::rock_paper_scissors {
                 recent_games: vector::empty(),
                 current_streak: 0,
                 last_timestamp: 0,
+                ai_choice: 0, // Initialize ai_choice to 0
             });
             move_to(account, GameEventHandle {
                 game_events: account::new_event_handle<GameEvent>(account),
@@ -156,7 +159,7 @@ module rock_paper_scissors::rock_paper_scissors {
         
         assert!(is_achievement_unlocked(achievements, achievement_id), E_ACHIEVEMENT_NOT_UNLOCKED);
         
-        // Add this check to prevent duplicate claims
+        // check to prevent duplicate claims
         assert!(!vector::contains(&reward_claim.claimed_rewards, &achievement_id), E_REWARD_ALREADY_CLAIMED);
         
         let reward_amount = get_reward_amount(achievement_id);
@@ -187,7 +190,8 @@ module rock_paper_scissors::rock_paper_scissors {
         coin::merge(&mut game_resources.balance, coins);
     }
 
-      public entry fun play_game(account: &signer, player_choice: u8) acquires GameState, GameEventHandle, Achievements, GameResources {
+       #[lint::allow_unsafe_randomness]
+    public entry fun play_game(account: &signer, player_choice: u8) acquires GameState, GameEventHandle, Achievements, GameResources {
         let account_addr = signer::address_of(account);
         
         if (!exists<GameState>(account_addr)) {
@@ -196,9 +200,11 @@ module rock_paper_scissors::rock_paper_scissors {
         
         assert!(player_choice <= 2, E_INVALID_CHOICE);
 
+        generate_ai_choice_internal(account);
+
         let game_state = borrow_global_mut<GameState>(account_addr);
         
-        let ai_choice = generate_ai_choice(game_state);
+        let ai_choice = game_state.ai_choice;
         let result = determine_winner(player_choice, ai_choice);
         let current_timestamp = timestamp::now_microseconds();
 
@@ -298,7 +304,7 @@ module rock_paper_scissors::rock_paper_scissors {
         *&borrow_global<RewardClaim>(account_addr).claimed_rewards
     }
 
-    // Add this new view function
+    //  view function
     #[view]
     public fun get_resource_account_address(): address {
         @rock_paper_scissors
@@ -336,10 +342,13 @@ module rock_paper_scissors::rock_paper_scissors {
         }
     }
 
-    fun generate_ai_choice(game_state: &GameState): u8 {
-        let random_value = (timestamp::now_microseconds() ^ game_state.last_timestamp) % 3;
-        (random_value as u8)
+     
+    public(friend) fun generate_ai_choice_internal(account: &signer) acquires GameState {
+        let game_state = borrow_global_mut<GameState>(signer::address_of(account));
+        let random_number = randomness::u8_range(0, 3);
+        game_state.ai_choice = random_number;
     }
+
 
     fun determine_winner(player_choice: u8, ai_choice: u8): u8 {
         if (player_choice == ai_choice) {

@@ -17,7 +17,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isConnected, initializeGame, 
     </p>
     {isConnected && (
       <button onClick={initializeGame} disabled={isLoading}>
-        Initialize Game
+        Start Game
       </button>
     )}
   </StyledHeroSection>

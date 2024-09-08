@@ -82,7 +82,7 @@ const LossText = styled(RewardText)`
 
 const ResultModal: React.FC<ResultModalProps> = ({ isVisible, onClose, result }) => (
   <ArcadeModal
-    visible={isVisible}
+    open={isVisible}
     onCancel={onClose}
     footer={null}
     width={400}

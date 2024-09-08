@@ -67,11 +67,11 @@ const App: React.FC = () => {
         {achievements.map((achievement) => (
           <Col key={achievement.id} span={8}>
             <AchievementCard
-              achievement={achievement}
-              handleClaimReward={handleClaimReward}
-              claimingReward={claimingReward}
-              claimedRewards={claimedRewards}
-              getRewardAmount={getRewardAmount}
+               achievement={achievement}
+               handleClaimReward={handleClaimReward}
+               claimingReward={claimingReward}
+               claimedRewards={claimedRewards}
+               getRewardAmount={getRewardAmount}
             />
           </Col>
         ))}
